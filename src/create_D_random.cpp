@@ -221,18 +221,6 @@ int main(int argc, char*argv[])
 			double error_D = 0;
 	  
 			MatrixXd x_a = D.jacobiSvd(ComputeThinU | ComputeThinV).solve(A);
-			/* error_D = (D*x_a-A).norm();
-		
-			error_D = (error_D*error_D)/myn;
-		
-			MPI_Allreduce(&error_D, &global_error_D, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-			global_error_D = global_error_D/npes;
-		if(!myrank) cout<<"l = "<<l<<" err = "<<global_error_D<<endl;
-			lold = l;
-			l = l + lstep;
-			if(!myrank)
-				cout << "l = "<< lold<<endl;*/
 			MatrixXd tmp;
 			for (int colid=0; colid<myn; colid++)
 			{
@@ -241,14 +229,14 @@ int main(int argc, char*argv[])
 				}
 			
 	
-			//cout<<"myrank = "<<myrank<<"  l = "<<l<<" err = "<<error_D<<endl;
+			
 			MPI_Barrier(MPI_COMM_WORLD);
 
 			MPI_Allreduce(&error_D, &global_error_D, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 			MPI_Barrier(MPI_COMM_WORLD);
 			
 			global_error_D = global_error_D/n;
-			//if(!myrank) cout<<"l = "<<l<<" err = "<<global_error_D<<endl;
+			
 			lold = l;
 			l = l + lstep;
 	
