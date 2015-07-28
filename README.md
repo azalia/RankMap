@@ -12,4 +12,4 @@ Iterative Learninmg Algorithms:
 Least squares minimization with L1 Penalty (a.k.a LASSO regularization) 
 Power iteration for sigular value decomposition
 
-Orthogonal Matching Persuit (OMP)
+Orthogonal Matching Pursuit (OMP)
