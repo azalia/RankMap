@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This code performs orthogonal matching persuit on a matrix A, with a given dictionary D, the output is a sparse V such that A ~ DV  
+# This code performs orthogonal matching pursuit on a matrix A, with a given dictionary D, the output is a sparse V such that A ~ DV  
 # Where A is approximated by D*V. D is a dictionary matrix and V is a coefficient matric. The factorization can be achieved using the RankMap methodology or other factorization schemes.
 # We use the batch OMP with LDLT decompostion approach
 
