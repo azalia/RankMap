@@ -131,7 +131,7 @@ int OMPBATCHLLT(MatrixXd& D, MatrixXd& A, int k, double epsilon, vector<Trip>& t
 			if(i>0)
 			{
 				w = L.block(0,0,i,i).triangularView<Eigen::Lower>().solve(G_I.block(idx,0,1,i).transpose());
-				//if (c==1552 && i<24) cout<<"i = "<<i<<endl;
+			
 				L.block(i,0,1,i) = w.transpose();
 				MatrixXd tempw = w.transpose()*w;
 				double wnorm = tempw(0,0);
@@ -188,11 +188,11 @@ int OMPBATCHLLT(MatrixXd& D, MatrixXd& A, int k, double epsilon, vector<Trip>& t
 		for(int j=0;j<i;j++)
 		{
 			tripletV.push_back(Trip(supp(0,j), c, gamma_I(j)));
-			//cout << supp(0,j) << ", " << supp(1,j) << "  ";	
+				
 		}
-		//cout << endl;
+	
 	}
-	//cout<<endl;
+
 
 	return 0;
 }
