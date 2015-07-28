@@ -134,11 +134,7 @@ int main(int argc, char*argv[])
 		
 		if(!myrank && verbose)
 			cout<< "Start reading V from " << sfV.str().c_str() <<endl;
-			
-		//cout << "i" << i << endl;
-		//cout << "myn_files" << myn_files << endl;
-		//cout << "myn" << myn << endl;
-		//cout << "maxiter" << numoffiles/npes << endl;
+
 		
 		while(1)
 		{
@@ -149,12 +145,6 @@ int main(int argc, char*argv[])
 			if(fV.eof())
 				break;
 
-			//if(!myrank)
-			//	cout << row << " " << col << " " << value << endl;
-			
-			
-			//col += myn_files*i; //shift cols
-			//cout<<"row"<<row<<" col"<< col << "myn" << myn<< endl;
 			assert(row>=0);
 			assert(row<l);
 			assert(col>=0);
@@ -217,15 +207,11 @@ int main(int argc, char*argv[])
 			{
 				if(e_i>0)
 				{
-
 					y = D*p - W*Qx;
-
-					
 				}
 				else
 				{
 					y = D*p;
-					
 				}
 				
 				q = D.transpose()*y;
