@@ -5,7 +5,7 @@
 # We use Adaptive Subgradient Methods (Adagrad) for gradient tuning
 
 
-#Notes for comiling and execuring:
+#Notes for comiling and executing:
 
 #For compiling modules GCC, OpenMPI (or alternatives) should be loaded, and the EIGEN library should be installed
 
