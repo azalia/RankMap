@@ -1,0 +1,14 @@
+#PBS -N spark
+#PBS -l nodes=2:ppn=4
+#PBS -M ebrahim@rice.edu
+#PBS -q parallel
+#PBS -m bae
+#PBS -V
+#PBS -o /scratch/em24/
+#PBS -e /scratch/em24/
+
+#usage:../sbin/davinci.sh --class "CLASS" JARFILE [INPUTS]
+
+$SPARK/sbin/davinci.sh --class "PowerMethodDVxS" target/power-method-1.0.jar 4 6 3 ../data/d ../data/v_4x6x3_1/ ../data/x 20
+
+

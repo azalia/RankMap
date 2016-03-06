@@ -1,0 +1,12 @@
+# .bashrc
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+
+# User specific aliases and functions
+module load jdk/1.7.0.55
+export SCALA_HOME=/home/am34/opt/scala-2.10.1
+export PATH=$SCALA_HOME/bin:$PATH
+export PATH=/home/am34/opt/apache-maven-3.2.3/bin:$PATH

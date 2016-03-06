@@ -1,0 +1,280 @@
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.Function2;
+import org.apache.spark.api.java.function.VoidFunction;
+
+import scala.Tuple2;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.io.BufferedReader;
+import java.io.FileReader;
+
+
+
+/** 
+ * Computes Fista of a matrix
+ */
+public final class IstaAx {
+  
+  
+  static public class MulByQ 
+		implements Function<Tuple2<Double,List<Double>>,Tuple2<Double,List<Double>>>
+	{
+		public List<Double> q;
+		
+		public MulByQ(List<Double> _q)
+		{
+			q = _q;
+		}
+		
+		@Override
+		public Tuple2<Double, List<Double>> call(Tuple2<Double, List<Double>> ax)
+		{
+			double dot = 0;
+			for(int i=0;i<q.size();i++)
+			{
+				dot += ax._2.get(i) * q.get(i);				
+			}
+			return new Tuple2<Double, List<Double>>(dot, ax._2);
+		}
+	}
+  
+  
+  	static public class Divbynorm 
+		implements Function<Tuple2<Double,List<Double>>,Tuple2<Double,List<Double>>>
+	{
+		public Double norm;
+		
+		public Divbynorm(Double _norm)
+		{
+			norm = _norm;
+		}
+		@Override
+		public Tuple2<Double, List<Double>> call(Tuple2<Double,List<Double>> ax)
+		{
+			return new Tuple2<Double, List<Double>>(ax._1/norm, ax._2);
+		}
+	}
+
+
+  
+  
+	
+  
+  
+
+  public static void main(String[] args) throws Exception 
+  {
+	  
+    if(args.length != 3)
+	{
+		System.out.println("enter Dfile Vfile steps");
+		return;
+	}
+    int steps = Integer.parseInt(args[2]);
+    
+    List<List<Double>> Dmat = new ArrayList<List<Double>>();
+    
+    BufferedReader br = new BufferedReader(new FileReader(args[0]));
+    try 
+    {
+		
+		StringBuilder sb = new StringBuilder();
+		String line = br.readLine();
+		
+		while(line != null)
+		{
+			ArrayList<Double> dcol = new ArrayList<Double>();
+			String[] dcol_s = line.split(" ");
+			for(int i=0;i<dcol_s.length;i++)
+			{
+				dcol.add(Double.parseDouble(dcol_s[i]));
+			}
+			Dmat.add(dcol);
+			line = br.readLine();
+		}
+    }
+    finally
+    {
+        br.close();
+    }
+        
+    
+    SparkConf sparkConf = new SparkConf().setAppName("PowerMethod");
+    JavaSparkContext jsc = new JavaSparkContext(sparkConf);
+
+    
+    //read data from text file
+    JavaRDD<String> data = jsc.textFile(args[1]);
+       
+    
+    
+    //transform text data to a coff of x and a col of A
+	JavaRDD<Tuple2<Double,List<Double>>> Vx = data.map(new Function<String, Tuple2<Double, List<Double>>>()
+		{
+			@Override
+			public Tuple2<Double,List<Double>> call(String s)
+			{
+				String[] parts = s.split(",");
+				
+				Double x = Double.parseDouble(parts[0]);
+				String[] a_vec_s = parts[1].split(" ");
+				List<Double> a = new ArrayList<Double>(a_vec_s.length);
+				for(int i=0;i<a_vec_s.length;i++)
+				{
+					a.add(i, Double.parseDouble(a_vec_s[i]));
+				}
+				return new Tuple2<Double,List<Double>>(x , a);
+			}
+		});
+		
+		//calculate p = Vx
+		List<Double> p = Vx.map(new Function<Tuple2<Double,List<Double>>, List<Double>>() {
+			@Override
+			public List<Double> call(Tuple2<Double,List<Double>> ax) {
+				List<Double> l_y = new ArrayList<Double>(ax._2.size());
+				for(int i=0;i<ax._2.size();i++)
+				{
+					l_y.add(i, ax._1 * ax._2.get(i));
+				}
+				return l_y;
+			}
+		}).reduce(new Function2<List<Double>, List<Double>, List<Double>>() {
+			@Override
+			public List<Double> call(List<Double> a, List<Double> b) {
+				List<Double> ret = new ArrayList<Double>(a.size());
+				
+				for(int i=0;i<a.size();i++)
+				{
+					ret.add(i, a.get(i) + b.get(i));
+				}
+				return ret;
+			}
+		});
+		
+		// for calculating A'Ax, where x is spasre
+		// calculate y = Dp
+		System.out.print(" y = ");
+		ArrayList<Double> y = new  ArrayList<Double>();
+		for(int i=0;i<Dmat.size();i++)
+		{
+			double dot = 0;
+			for(int j=0;j<p.size();j++)
+			{
+				dot += p.get(j) * Dmat.get(i).get(j);
+			}
+			y.add(dot);
+			System.out.print(dot + " ");
+		}
+		System.out.println();
+		
+		
+		
+		// calculate q = D'y
+		System.out.print("q = ");
+		ArrayList<Double> q = new  ArrayList<Double>();
+		for(int j=0;j<p.size();j++)
+		{
+			double dot = 0;
+			for(int i=0;i<Dmat.size();i++)
+			{
+				dot += y.get(i) * Dmat.get(i).get(j);
+			}
+			q.add(dot);
+			System.out.print(dot + " ");
+		}
+		System.out.println();
+		
+		//calculate x = ATy
+		Vx = Vx.map(new MulByQ(q));
+		
+		
+    
+    
+    //steps of power method
+    for(int step=0;step<steps;step++)
+    {
+		//calculate p = Vx
+		List<Double> p = Vx.map(new Function<Tuple2<Double,List<Double>>, List<Double>>() {
+			@Override
+			public List<Double> call(Tuple2<Double,List<Double>> ax) {
+				List<Double> l_y = new ArrayList<Double>(ax._2.size());
+				for(int i=0;i<ax._2.size();i++)
+				{
+					l_y.add(i, ax._1 * ax._2.get(i));
+				}
+				return l_y;
+			}
+		}).reduce(new Function2<List<Double>, List<Double>, List<Double>>() {
+			@Override
+			public List<Double> call(List<Double> a, List<Double> b) {
+				List<Double> ret = new ArrayList<Double>(a.size());
+				
+				for(int i=0;i<a.size();i++)
+				{
+					ret.add(i, a.get(i) + b.get(i));
+				}
+				return ret;
+			}
+		});
+		
+		// calculate y = Dp
+		System.out.print(" y = ");
+		ArrayList<Double> y = new  ArrayList<Double>();
+		for(int i=0;i<Dmat.size();i++)
+		{
+			double dot = 0;
+			for(int j=0;j<p.size();j++)
+			{
+				dot += p.get(j) * Dmat.get(i).get(j);
+			}
+			y.add(dot);
+			System.out.print(dot + " ");
+		}
+		System.out.println();
+		
+		
+		
+		// calculate q = D'y
+		System.out.print("q = ");
+		ArrayList<Double> q = new  ArrayList<Double>();
+		for(int j=0;j<p.size();j++)
+		{
+			double dot = 0;
+			for(int i=0;i<Dmat.size();i++)
+			{
+				dot += y.get(i) * Dmat.get(i).get(j);
+			}
+			q.add(dot);
+			System.out.print(dot + " ");
+		}
+		System.out.println();
+		
+		//calculate x = ATy
+		Vx = Vx.map(new MulByQ(q));
+		
+		
+		//reduce norm of x
+		Double normX2 = Vx.map(new Function<Tuple2<Double,List<Double>>, Double>() {
+			@Override
+			public Double call(Tuple2<Double,List<Double>> ax) {
+				return (ax._1*ax._1);
+			}
+		}).reduce(new Function2<Double, Double, Double>() {
+			@Override
+			public Double call(Double a, Double b) {
+				return a + b;
+			}
+		});
+		
+		//normalized x
+		Vx = Vx.map(new Divbynorm(Math.sqrt(normX2)));
+		
+		System.out.format("normX2 = %f\n", normX2);
+		
+	}
+  }
+}

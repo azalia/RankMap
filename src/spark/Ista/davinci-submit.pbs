@@ -1,0 +1,14 @@
+#PBS -N spark
+#PBS -l nodes=8:ppn=9
+#PBS -M ebrahim@rice.edu
+#PBS -q parallel
+#PBS -m bae
+#PBS -V
+#PBS -o /scratch/em24/
+#PBS -e /scratch/em24/
+
+#usage:../sbin/davinci.sh --class "CLASS" JARFILE [INPUTS]
+
+../../sbin/davinci.sh --class "IstaDVxS" target/ista-1.0.jar 4 6 3 0.03 0.1 ../data/d ../data/v_4x6x3_1/ ../data/x ../data/y 20 0
+
+
